@@ -19,3 +19,38 @@
     color: #181818;
   }
 }
+
+/* Additional styles for our debug UI */
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.2s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: light) {
+  .card {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .card:hover {
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+}
