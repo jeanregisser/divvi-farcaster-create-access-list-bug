@@ -164,18 +164,23 @@ function AccountInfo({
   chainId: number;
   usdcAddress: Address;
 }) {
-  const { data: nativeBalance } = useBalance({ address });
-  const { data: usdcSymbol } = useReadContract({
+  const { data: nativeBalance, status: nativeBalanceStatus } = useBalance({
+    address,
+  });
+
+  const { data: usdcSymbol, status: symbolStatus } = useReadContract({
     address: usdcAddress,
     abi: erc20Abi,
     functionName: "symbol",
   });
-  const { data: usdcDecimals } = useReadContract({
+
+  const { data: usdcDecimals, status: decimalsStatus } = useReadContract({
     address: usdcAddress,
     abi: erc20Abi,
     functionName: "decimals",
   });
-  const { data: usdcBalance } = useReadContract({
+
+  const { data: usdcBalance, status: balanceStatus } = useReadContract({
     address: usdcAddress,
     abi: erc20Abi,
     functionName: "balanceOf",
@@ -183,6 +188,26 @@ function AccountInfo({
   });
 
   const currentChain = SUPPORTED_CHAINS.find((chain) => chain.id === chainId);
+
+  const formatNativeBalance = () => {
+    if (nativeBalanceStatus === "pending") return "Loading...";
+    if (nativeBalanceStatus === "error") return "Error loading balance";
+    return nativeBalance.formatted;
+  };
+
+  const formatUsdcBalance = () => {
+    if (balanceStatus === "pending") return "Loading...";
+    if (balanceStatus === "error") return "Error loading balance";
+    if (decimalsStatus === "error" || usdcDecimals === undefined)
+      return "Error loading decimals";
+    return formatUnits(usdcBalance, usdcDecimals);
+  };
+
+  const getUsdcSymbol = () => {
+    if (symbolStatus === "pending") return "...";
+    if (symbolStatus === "error") return "USDC";
+    return usdcSymbol || "USDC";
+  };
 
   return (
     <div
@@ -196,19 +221,25 @@ function AccountInfo({
       <h3>💰 Account Balances</h3>
       <div style={{ fontSize: "14px" }}>
         <div>
-          <strong>Native Token:</strong> {nativeBalance?.formatted}{" "}
+          <strong>Native Token:</strong> {formatNativeBalance()}{" "}
           {currentChain?.nativeCurrency.symbol}
         </div>
         <div>
-          <strong>USDC:</strong>{" "}
-          {usdcBalance && usdcDecimals
-            ? formatUnits(usdcBalance, usdcDecimals)
-            : "Loading..."}{" "}
-          {usdcSymbol}
+          <strong>USDC:</strong> {formatUsdcBalance()} {getUsdcSymbol()}
         </div>
         <div style={{ marginTop: "10px", fontSize: "12px", color: "#666" }}>
           <strong>USDC Contract:</strong> {usdcAddress}
         </div>
+        {(nativeBalanceStatus === "error" ||
+          symbolStatus === "error" ||
+          decimalsStatus === "error" ||
+          balanceStatus === "error") && (
+          <div
+            style={{ marginTop: "10px", fontSize: "12px", color: "#dc3545" }}
+          >
+            ⚠️ Some contract data failed to load (this may indicate RPC issues)
+          </div>
+        )}
       </div>
     </div>
   );
