@@ -58,6 +58,8 @@ function ConnectMenu() {
             padding: "10px",
             backgroundColor: "#e8f5e8",
             borderRadius: "5px",
+            wordBreak: "break-all",
+            overflowWrap: "break-word",
           }}
         >
           <strong>✅ Connected:</strong> {address}
@@ -236,7 +238,15 @@ function AccountInfo({
         <div>
           <strong>USDC:</strong> {formatUsdcBalance()} {getUsdcSymbol()}
         </div>
-        <div style={{ marginTop: "10px", fontSize: "12px", color: "#666" }}>
+        <div
+          style={{
+            marginTop: "10px",
+            fontSize: "12px",
+            color: "#666",
+            wordBreak: "break-all",
+            overflowWrap: "break-word",
+          }}
+        >
           <strong>USDC Contract:</strong> {usdcAddress}
         </div>
         {(nativeBalanceStatus === "error" ||
@@ -472,7 +482,14 @@ function TransactionTester({
         </div>
 
         {includeDivviReferral && (
-          <div style={{ fontSize: "12px", color: "#666" }}>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#666",
+              wordBreak: "break-all",
+              overflowWrap: "break-word",
+            }}
+          >
             🏷️ Using Divvi identifier: {DIVVI_IDENTIFIER}
           </div>
         )}
@@ -512,7 +529,15 @@ function TransactionTester({
       </button>
 
       {hash && (
-        <div style={{ marginTop: "10px", fontSize: "12px", color: "#666" }}>
+        <div
+          style={{
+            marginTop: "10px",
+            fontSize: "12px",
+            color: "#666",
+            wordBreak: "break-all",
+            overflowWrap: "break-word",
+          }}
+        >
           Transaction Hash: {hash}
         </div>
       )}
@@ -563,7 +588,12 @@ function ResultDisplay({ result }: { result: any }) {
 
         {!isError && result.hash && (
           <div style={{ marginTop: "10px" }}>
-            <div>
+            <div
+              style={{
+                wordBreak: "break-all",
+                overflowWrap: "break-word",
+              }}
+            >
               <strong>Transaction Hash:</strong> {result.hash}
             </div>
             <div>
