@@ -9,9 +9,16 @@ import {
   useReadContract,
   useWriteContract,
   useWaitForTransactionReceipt,
+  useEstimateGas,
 } from "wagmi";
 import { base, celo } from "wagmi/chains";
-import { erc20Abi, parseUnits, formatUnits, Address } from "viem";
+import {
+  erc20Abi,
+  parseUnits,
+  formatUnits,
+  Address,
+  encodeFunctionData,
+} from "viem";
 
 // USDC contract addresses from the documentation
 const USDC_ADDRESSES: Record<number, Address> = {
@@ -256,10 +263,31 @@ function TransactionTester({
   usdcAddress: Address;
   onResult: (result: any) => void;
 }) {
+  const [usePreEstimatedGas, setUsePreEstimatedGas] = useState(false);
+
   const { data: usdcDecimals } = useReadContract({
     address: usdcAddress,
     abi: erc20Abi,
     functionName: "decimals",
+  });
+
+  // Prepare transaction data for gas estimation
+  const transferData = usdcDecimals
+    ? encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: [address, parseUnits(TOKEN_SEND_AMOUNT, usdcDecimals)],
+      })
+    : undefined;
+
+  // Estimate gas (only when toggle is enabled and we have the data)
+  const { data: estimatedGas, status: gasEstimationStatus } = useEstimateGas({
+    to: usdcAddress,
+    data: transferData,
+    account: address,
+    query: {
+      enabled: usePreEstimatedGas && !!transferData,
+    },
   });
 
   const { writeContract, data: hash, isPending, error } = useWriteContract();
@@ -303,12 +331,19 @@ function TransactionTester({
     if (!usdcDecimals) return;
 
     try {
-      await writeContract({
+      const txParams: any = {
         address: usdcAddress,
         abi: erc20Abi,
         functionName: "transfer",
         args: [address, parseUnits(TOKEN_SEND_AMOUNT, usdcDecimals)],
-      });
+      };
+
+      // Include pre-estimated gas if the toggle is enabled and we have the gas estimate
+      if (usePreEstimatedGas && estimatedGas) {
+        txParams.gas = estimatedGas;
+      }
+
+      await writeContract(txParams);
     } catch (err) {
       onResult({
         type: "error",
@@ -335,9 +370,63 @@ function TransactionTester({
         wallet will attempt to create an access list behind the scenes.
       </p>
 
+      {/* Gas Estimation Toggle */}
+      <div
+        style={{
+          marginBottom: "15px",
+          padding: "10px",
+          backgroundColor: "#f8f9fa",
+          borderRadius: "5px",
+        }}
+      >
+        <div
+          style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
+        >
+          <input
+            type="checkbox"
+            id="usePreEstimatedGas"
+            checked={usePreEstimatedGas}
+            onChange={(e) => setUsePreEstimatedGas(e.target.checked)}
+            style={{ marginRight: "8px" }}
+          />
+          <label
+            htmlFor="usePreEstimatedGas"
+            style={{ fontSize: "14px", fontWeight: "bold" }}
+          >
+            Pre-estimate gas
+          </label>
+        </div>
+
+        {usePreEstimatedGas && (
+          <div style={{ fontSize: "12px", color: "#666" }}>
+            {gasEstimationStatus === "pending" && "⏳ Estimating gas..."}
+            {gasEstimationStatus === "success" &&
+              estimatedGas !== undefined &&
+              estimatedGas > 0n &&
+              `✅ Estimated gas: ${estimatedGas.toString()}`}
+            {gasEstimationStatus === "error" &&
+              "❌ Gas estimation failed (this indicates RPC issues)"}
+            {gasEstimationStatus !== "pending" &&
+              gasEstimationStatus !== "success" &&
+              gasEstimationStatus !== "error" &&
+              "💤 Ready to estimate gas"}
+          </div>
+        )}
+
+        <div style={{ fontSize: "11px", color: "#666", marginTop: "5px" }}>
+          💡 This fetches gas beforehand to see if it fixes the issue with
+          eth_createAccessList
+        </div>
+      </div>
+
       <button
         onClick={handleSendTransaction}
-        disabled={isPending || isConfirming || !usdcDecimals}
+        disabled={
+          isPending ||
+          isConfirming ||
+          !usdcDecimals ||
+          (usePreEstimatedGas && gasEstimationStatus === "pending")
+        }
         style={{
           padding: "10px 20px",
           fontSize: "16px",
@@ -350,8 +439,12 @@ function TransactionTester({
       >
         {isPending && "Preparing Transaction..."}
         {isConfirming && "Confirming Transaction..."}
+        {usePreEstimatedGas &&
+          gasEstimationStatus === "pending" &&
+          "Estimating Gas..."}
         {!isPending &&
           !isConfirming &&
+          !(usePreEstimatedGas && gasEstimationStatus === "pending") &&
           `Test ${TOKEN_SEND_AMOUNT} USDC Transfer on ${currentChain?.name}`}
       </button>
 
