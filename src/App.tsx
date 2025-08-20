@@ -1,5 +1,6 @@
 import { sdk } from "@farcaster/miniapp-sdk";
 import { useEffect, useState } from "react";
+import { getReferralTag } from "@divvi/referral-sdk";
 import {
   useAccount,
   useConnect,
@@ -28,6 +29,7 @@ const USDC_ADDRESSES: Record<number, Address> = {
 
 const SUPPORTED_CHAINS = [base, celo];
 const TOKEN_SEND_AMOUNT = "0.01"; // 0.01 USDC
+const DIVVI_IDENTIFIER = "0x7108DD7E0Ea72e203F3b492699F7CA8b2e237261";
 
 function App() {
   useEffect(() => {
@@ -264,6 +266,7 @@ function TransactionTester({
   onResult: (result: any) => void;
 }) {
   const [usePreEstimatedGas, setUsePreEstimatedGas] = useState(false);
+  const [includeDivviReferral, setIncludeDivviReferral] = useState(false);
 
   const { data: usdcDecimals } = useReadContract({
     address: usdcAddress,
@@ -342,16 +345,27 @@ function TransactionTester({
     if (!usdcDecimals) return;
 
     try {
+      const transferAmount = parseUnits(TOKEN_SEND_AMOUNT, usdcDecimals);
+
       const txParams: any = {
         address: usdcAddress,
         abi: erc20Abi,
         functionName: "transfer",
-        args: [address, parseUnits(TOKEN_SEND_AMOUNT, usdcDecimals)],
+        args: [address, transferAmount],
       };
 
       // Include pre-estimated gas if the toggle is enabled and we have the gas estimate
       if (usePreEstimatedGas && estimatedGas) {
         txParams.gas = estimatedGas;
+      }
+
+      // Include Divvi referral tag if the toggle is enabled
+      if (includeDivviReferral) {
+        const referralTag = getReferralTag({
+          user: address, // User address that consented to the transaction
+          consumer: DIVVI_IDENTIFIER, // Consumer address
+        });
+        txParams.dataSuffix = referralTag;
       }
 
       await writeContract(txParams);
@@ -427,6 +441,44 @@ function TransactionTester({
         <div style={{ fontSize: "11px", color: "#666", marginTop: "5px" }}>
           💡 This fetches gas beforehand to see if it fixes the issue with
           eth_createAccessList
+        </div>
+      </div>
+
+      {/* Divvi Referral Toggle */}
+      <div
+        style={{
+          marginBottom: "15px",
+          padding: "10px",
+          backgroundColor: "#e8f4f8",
+          borderRadius: "5px",
+        }}
+      >
+        <div
+          style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}
+        >
+          <input
+            type="checkbox"
+            id="includeDivviReferral"
+            checked={includeDivviReferral}
+            onChange={(e) => setIncludeDivviReferral(e.target.checked)}
+            style={{ marginRight: "8px" }}
+          />
+          <label
+            htmlFor="includeDivviReferral"
+            style={{ fontSize: "14px", fontWeight: "bold" }}
+          >
+            Include Divvi Referral Tag
+          </label>
+        </div>
+
+        {includeDivviReferral && (
+          <div style={{ fontSize: "12px", color: "#666" }}>
+            🏷️ Using Divvi identifier: {DIVVI_IDENTIFIER}
+          </div>
+        )}
+
+        <div style={{ fontSize: "11px", color: "#666", marginTop: "5px" }}>
+          💡 Test if Divvi referral tags impact eth_createAccessList behavior
         </div>
       </div>
 
