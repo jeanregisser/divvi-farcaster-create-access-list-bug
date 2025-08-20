@@ -290,7 +290,13 @@ function TransactionTester({
     },
   });
 
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
+  const {
+    writeContract,
+    data: hash,
+    isPending,
+    error,
+    reset,
+  } = useWriteContract();
 
   const {
     isLoading: isConfirming,
@@ -301,6 +307,11 @@ function TransactionTester({
   });
 
   const currentChain = SUPPORTED_CHAINS.find((chain) => chain.id === chainId);
+
+  // Reset writeContract state when chain changes
+  useEffect(() => {
+    reset();
+  }, [chainId, reset]);
 
   useEffect(() => {
     if (error) {
