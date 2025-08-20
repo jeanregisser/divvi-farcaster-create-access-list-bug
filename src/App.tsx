@@ -80,7 +80,7 @@ function ConnectMenu() {
           cursor: "pointer",
         }}
       >
-        Connect Farcaster Wallet
+        Connect Wallet
       </button>
     </div>
   );

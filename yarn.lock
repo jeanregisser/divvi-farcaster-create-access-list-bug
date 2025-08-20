@@ -562,11 +562,6 @@
     eventemitter3 "^5.0.1"
     ox "^0.4.4"
 
-"@farcaster/miniapp-wagmi-connector@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@farcaster/miniapp-wagmi-connector/-/miniapp-wagmi-connector-1.0.0.tgz#77454ffd4c70772a40d2480b2d59cfe9439182d0"
-  integrity sha512-vMRZbekUUctnAUvBFhNoEsJlujRRdxop94fDy5LrKiRR9ax0wtp8gCvLYO+LpaP2PtGs0HFpRwlHNDJWvBR8bg==
-
 "@farcaster/quick-auth@^0.0.6":
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/@farcaster/quick-auth/-/quick-auth-0.0.6.tgz#f59583041ad3591afe4a27e3c196be11a7ab21fb"

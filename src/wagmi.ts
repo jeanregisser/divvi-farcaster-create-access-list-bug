@@ -1,10 +1,9 @@
-import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
-import { http, createConfig } from "wagmi";
+import { http, createConfig, injected } from "wagmi";
 import { base, mainnet, celo } from "wagmi/chains";
 
 export const config = createConfig({
   chains: [base, mainnet, celo],
-  connectors: [farcasterMiniApp()],
+  connectors: [injected()],
   transports: {
     [base.id]: http(),
     [mainnet.id]: http(),
